@@ -1,40 +1,31 @@
 <?php
 namespace App\Infrastructure\Repository\SqlRepository;
 
-use App\classes\CreateLogger;
-
+use PDOException;
+use PDOStatement;
 use App\Infrastructure\Connection\Sql;
 use App\Infrastructure\Repository\SqlRepository\SqlInterface;
-use App\Infrastructure\Repository\Boletim_cirurgia_Repository\BoletimCirurgiaRepository;
-use PDOStatement;
 
-class SqlRepository implements SqlInterface { 
-   public function __construct
-    (
-        public Sql $sql
-    ){}
-    
-    public function insert($table,$dados) :int
+class SqlRepository implements SqlInterface {
+    public function __construct(public Sql $sql) {}
+
+    public function insert(string $table, array $dados): int
     {
         try {
-            
-            $stmt = $this->sql->insert($table,$dados);
+            $stmt = $this->sql->insert($table, $dados);
             $stmt->execute();
             return $stmt->rowCount();
-        } catch (\Exception $e) {
-                if ($e->getCode() == '23505') {
-                    
-
-                    throw new \PDOException("Falha ao inserir dados! O campo de email ou o ID de login pode já estar em uso.");
-                  }
-            throw new \PDOException($e->getMessage());
-            // return 0;
+        } catch (PDOException $e) {
+            $message = $e->getCode() === '23505' || $e->getCode() === '1062'
+                ? "Falha ao inserir dados! O campo de email ou o ID de login pode já estar em uso."
+                : $e->getMessage();
+            throw new PDOException($message);
         }
-   }
+    }
 
-    public function delete(int|string $id,string $table,string|int $params = 'id'):int
+    public function delete(int|string $id, string $table, string|int $params = 'id'): int
     {
-        $stmt= $this->sql->delete($id,$table);
+        $stmt = $this->sql->delete($id, $table);
         try {
             $stmt->execute();
             return $stmt->rowCount();
@@ -43,38 +34,35 @@ class SqlRepository implements SqlInterface {
         }
     }
 
-    public function selectFindAll(string $table) :array| null
+    public function selectFindAll(string $table): array | null
     {
         $stmt = $this->sql->selectFindAll($table);
         $stmt->execute();
-        $r=$stmt->fetchAll(\PDO::FETCH_ASSOC); 
+        $r = $stmt->fetchAll(\PDO::FETCH_ASSOC); 
         
         return $r;
     }
 
-    public function selectUserOfId(int|string $id,string $table,string|int $params='id') :array |null
+    public function selectUserOfId(int|string $id, string $table, string|int $params = 'id'): array | null
     {
-        $stmt = $this->sql->selectUserOfId($id,$table,$params);
+        $stmt = $this->sql->selectUserOfId($id, $table, $params);
         $stmt->execute();
-        $r=$stmt->fetchAll(\PDO::FETCH_ASSOC);
+        $r = $stmt->fetchAll(\PDO::FETCH_ASSOC);
         
         return $r;
     }
 
-    public function update(string|int $id,string $table,array $dados,string|int $params='id') : int 
+    public function update(string|int $id, string $table, array $dados, string|int $params = 'id'): int
     {   
-        $stmt  = $this->sql->update($id,$table,$dados,$params);
+        $stmt = $this->sql->update($id, $table, $dados, $params);
         try {
             $stmt->execute();
             return $stmt->rowCount();
         } catch (\Exception $e) {
-            if ($e->getCode() == '23505') {
-                throw new \PDOException("Falha ao atualizar dados! O campo de email ou o ID de login pode já estar em uso.");
-              }
-        throw new \PDOException("Falha ao atualizar dados do usuario");
+            if ($e->getCode() == '23505' || $e->getCode() == '1062') {
+                throw new PDOException("Falha ao atualizar dados! O campo de email ou o ID de login pode já estar em uso.");
             }
+            throw new PDOException("Falha ao atualizar dados do usuário");
+        }
     }
-    
-
-
 }

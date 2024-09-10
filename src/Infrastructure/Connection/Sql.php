@@ -24,8 +24,6 @@ class Sql extends \PDO
                 $env['user'],
                 $env['password']);
             } catch (\PDOException $th) {
-                $log = new CreateLogger();
-                $log->loggerTelegram("ERRO-SQL","Erro ao conectar banco de dados {$env['sgbd']}");
                 throw new \PDOException('Erro ao conectar banco de dados');
             }
           

@@ -1,6 +1,7 @@
 <?php 
 namespace App\Application\Actions\LoginAction\LogarAction;
 
+use App\Application\Actions\LoginAction\LoginAction;
 use Firebase\JWT\JWT;
 use Firebase\JWT\Key;
 use Slim\Psr7\Response;

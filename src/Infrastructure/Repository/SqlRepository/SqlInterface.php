@@ -20,12 +20,4 @@ interface SqlInterface {
 
     public function update(int $id,string $table ,array $dados,string|int $params='id') : int ;
 
-
-
-
-
-
-
-
-
 }

@@ -1,27 +1,44 @@
 <?php
 
 declare(strict_types=1);
-
-use App\Application\Handlers\HttpErrorHandler;
-use App\Application\Handlers\ShutdownHandler;
-use App\Application\ResponseEmitter\ResponseEmitter;
-use App\Application\Settings\SettingsInterface;
+@session_start();
 use DI\ContainerBuilder;
+
+
 use Slim\Factory\AppFactory;
+use App\Application\token\Token;
+use App\Application\Handlers\ShutdownHandler;
 use Slim\Factory\ServerRequestCreatorFactory;
+use App\Application\Handlers\HttpErrorHandler;
+use App\Application\Settings\SettingsInterface;
+use App\Application\ResponseEmitter\ResponseEmitter;
 
 require __DIR__ . '/../vendor/autoload.php';
+
+function myErrorHandler($errno, $errstr, $errfile, $errline) {
+    return $errstr;
+}
+set_error_handler("myErrorHandler");
 
 // Instantiate PHP-DI ContainerBuilder
 $containerBuilder = new ContainerBuilder();
 
 if (false) { // Should be set to true in production
-	$containerBuilder->enableCompilation(__DIR__ . '/../var/cache');
+	// $containerBuilder->enableCompilation(__DIR__ . '/../var/cache');
 }
 
 // Set up settings
 $settings = require __DIR__ . '/../app/settings.php';
 $settings($containerBuilder);
+
+// $env = parse_ini_file(__DIR__ .'/../.env');
+
+$env = parse_ini_file(__DIR__ ."/../.env");
+
+if(false === $env){
+    throw new Exception("Variavel de Ambiente Env nao foi encontrada ou esta mal configurada");
+}
+
 
 // Set up dependencies
 $dependencies = require __DIR__ . '/../app/dependencies.php';
@@ -37,6 +54,13 @@ $container = $containerBuilder->build();
 // Instantiate the app
 AppFactory::setContainer($container);
 $app = AppFactory::create();
+
+Token::setContainer($container);
+$token=Token::create();
+
+// $config = parse_ini_file(__DIR__ .'../config');
+
+
 $callableResolver = $app->getCallableResolver();
 
 // Register middleware
@@ -62,6 +86,20 @@ $request = $serverRequestCreator->createServerRequestFromGlobals();
 $responseFactory = $app->getResponseFactory();
 $errorHandler = new HttpErrorHandler($callableResolver, $responseFactory);
 
+//Criando guard 
+// $guard = new Guard($responseFactory);
+// $twig->addExtension(new CsrfExtension($guard));
+
+// // Generate new tokens
+// function gerar_token()
+// {
+//     global $guard;
+//     $csrfNameKey = $guard->getTokenNameKey();
+//     $csrfValueKey = $guard->getTokenValueKey();
+//     $keyPair = $guard->generateToken();
+// }
+
+// gerar_token();
 // Create Shutdown Handler
 $shutdownHandler = new ShutdownHandler($request, $errorHandler, $displayErrorDetails);
 register_shutdown_function($shutdownHandler);
@@ -80,3 +118,4 @@ $errorMiddleware->setDefaultErrorHandler($errorHandler);
 $response = $app->handle($request);
 $responseEmitter = new ResponseEmitter();
 $responseEmitter->emit($response);
+

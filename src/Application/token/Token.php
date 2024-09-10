@@ -20,7 +20,7 @@ class Token
     protected static ?ContainerInterface $container = null;  
     private function __construct
     (
-        protected CreateLogger $log,
+
         )
     {
       
@@ -42,18 +42,14 @@ class Token
 
         $payload = [
             'exp' => $datenow->getTimestamp(),
-            'id_unidade' => $user['id_unidade'],
-            'unidade' => $user['unidades'],
-            'cnes' => $user['cnes'],
-            'id_adm' => $user['id_adm'],
-            'id_nivel' => $user['id_nivel'],
+            'usr_id' => $user['id'],
+            'usr_name' => $user['usr_name'],
+            'usr_level' => $user['usr_level'],
         ];  
         try {
             $this->TokenConst($payload);
             $jwt = JWT::encode($payload, $key, 'HS256');
         } catch (\Throwable $th) {
-
-            $this->log->loggerCSV("Token_generete_fail",'tentativa de gerar token falhou'.$th->getMessage(),'warning',$_SERVER['REMOTE_ADDR']);
             throw new Exception("Não foi possivel gerar token");
         }   
         //gerando constant com dados do usuario 
@@ -68,9 +64,7 @@ class Token
         // $cookie = $_COOKIE["Authorization"] ?? null ;
 
         if ($cookie == null || $cookie == ''){
-            $this->log->loggerCSV("token_decoded_fail",'tentativa de acesso com Cookie/Token Inexistente ou Invalido','warning',$_SERVER['REMOTE_ADDR']);
-            // $this->destructHeaderToken();
-            throw new Exception("Cookiee/Token Inexistente ou Invalido");
+            throw new Exception("Cookie/Token Inexistente ou Invalido");
         };
 
         try {
@@ -79,18 +73,13 @@ class Token
             $this->tokenConst($decoded_array);
 
         } catch (ExpiredException $ex) { // Captura um token expirado
-            // $this->destructHeaderToken();
-            $this->log->loggerCSV("token_decoded_fail_", 'tentativa de acesso com Token Expirado', 'warning', $_SERVER['REMOTE_ADDR']);
             throw new Exception("Acesso nao permitido: Cookie/Token Expirado", 403);
 
         } catch (SignatureInvalidException $ex) { // Captura um token com assinatura inválida
-            // $this->destructHeaderToken();
-            $this->log->loggerCSV("token_decoded_fail_", 'tentativa de acesso com Token Alterado ou Invalido', 'warning', $_SERVER['REMOTE_ADDR']);
+
             throw new Exception("Acesso nao permitido: Cookie/Token Invalido", 403);
 
         } catch (\Throwable $th) { 
-            // $this->destructHeaderToken();
-            $this->log->loggerCSV("token_decoded_fail", $th->getMessage(), 'warning', $_SERVER['REMOTE_ADDR']);
             throw new Exception("Erro ao processar o Token", 500);
         }
  
@@ -99,13 +88,10 @@ class Token
     public function tokenConst(array $payload)
     {   
        try {
-           define ('UNI_ID',$payload['id_unidade']);
-           define ('UNI_NAME',$payload['unidade']);
-           define ('UNI_CNES',$payload['cnes']);
-           define ('UNI_ADM',$payload['id_adm']);
-           define ('UNI_NIVEL',$payload['id_nivel']);    
+           define ('USR_ID',$payload['id']);
+           define ('USR_NAME',$payload['usr_name']);
+           define ('USR_LEVEL',$payload['id_level']);    
        } catch (\Throwable $th) {
-            $this->log->loggerCSV('token_constants_fail',$th->getMessage());
             throw new Exception('Erroo ao criar constantes de sessao do usuario');
        }
     }
@@ -130,10 +116,6 @@ class Token
     public static function create(): Token
     {
         return new self(
-         static::$container->get(CreateLogger::class),
-        
-         
-
 
         );
     }

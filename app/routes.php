@@ -2,28 +2,24 @@
 
 declare(strict_types=1);
 
-use App\Application\Actions\LoginAction\LogarAction\LoginSessionAction;
-use App\Application\Actions\User\ListUsersAction;
-use App\Application\Actions\User\ViewUserAction;
+use Slim\App;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
-use Slim\App;
+use App\Application\Actions\RegisterAction\RegisterAction;
 use Slim\Interfaces\RouteCollectorProxyInterface as Group;
+use App\Application\Actions\LoginAction\LoginSessionAction;
+
 
 return function (App $app) {
-    $app->options('/{routes:.*}', function (Request $request, Response $response) {
-        // CORS Pre-Flight OPTIONS Request Handler
+    // CORS Pre-Flight OPTIONS Request Handler
+    $app->options('/{routes:.*}', function (Request $request, Response $response): Response {
         global $env;
         return $response
-            ->withHeader('Access-Control-Allow-Origin', "$env[access_origin]")
+            ->withHeader('Access-Control-Allow-Origin', $env['access_origin'])
             ->withHeader('Access-Control-Allow-Headers', 'X-Requested-With, Content-Type, Accept, Origin, Authorization')
             ->withHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
- 
     });
-    $app->post("/login",LoginSessionAction::class );
 
-    $app->group('/users', function (Group $group) {
-        $group->get('', ListUsersAction::class);
-        $group->get('/{id}', ViewUserAction::class);
-    });
+    $app->post('/register', RegisterAction::class);
+    $app->post("/login", LoginSessionAction::class);
 };

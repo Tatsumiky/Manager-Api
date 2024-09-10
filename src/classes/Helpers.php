@@ -57,41 +57,41 @@ trait Helpers{
 
     public function verifyDayOfWeek() 
     {
-        // $date = $GLOBALS['DAY']->format('D');
-        // //Mon 
-        // switch ($date) {
-        //     case 'Mon':
-        //         return [$GLOBALS['date'],1]; //2024-09-02 SIGNIFICA QUE É //SEGUNDA-FEIRA A PERMISSAO É INSERIR E EDITAR      
-        //     case 'Tue':
-        //         return [$GLOBALS['DAY']->modify('-1 day')->format('Y-m-d'),1];//2024-09-03; //TRAS OS DADOS DE SEGUNDA A PERMISSAO É INSERIR E EDITAR
-        //     case 'Wed':
-        //         return [$GLOBALS['DAY']->modify('-2 day')->format('Y-m-d'),0];//2024-09-04;  //TRAS OS DADOS DE SEGUNDA A PERMISSAO É APENAS VISUALIZAR
-        //     case 'Thu':
-        //         return [$GLOBALS['DAY']->modify('-3 day')->format('Y-m-d'),0];//2024-09-05; //TRAS OS DADOS DE SEGUNDA A PERMISSAO É APENAS VISUALIZAR
-        //     case 'Fri':
-        //         return [$GLOBALS['DAY']->modify('-4 day')->format('Y-m-d'),0];//2024-09-06; //TRAS OS DADOS DE SEGUNDA A PERMISSAO É APENAS VISUALIZAR
-        //     case 'Sat':
-        //         return [$GLOBALS['DAY']->modify('-5 day')->format('Y-m-d'),0];//2024-09-07; //TRAS OS DADOS DE SEGUNDA A PERMISSAO É APENAS VISUALIZAR
-        //     case 'Sun':
-        //         return [$GLOBALS['DAY']->modify('-5 day')->format('Y-m-d'),0];//2024-09-03; //TRAS OS DADOS DE SEGUNDA A PERMISSAO É APENAS VISUALIZAR
-        //     default:
-        //         return false;
-        //       //CASO NAO TENHA NENHUM DADO REGISTRADO , A PERMISSAO RETORNA INSERIR
-        // }
-        return [$GLOBALS['date']];
+        $date = $GLOBALS['DAY']->format('D');
+    
+    return match ($date) {
+        'Mon' => [$GLOBALS['date'], 'Mon'],
+        //'Tue' => [$GLOBALS['date'], 'Tue'],
+        'Tue' => [$GLOBALS['DAY']->modify('-1 day')->format('Y-m-d'), 'Tue'],
+        'Wed' => [$GLOBALS['DAY']->modify('-2 day')->format('Y-m-d'), 'Wed'],
+        'Thu' => [$GLOBALS['DAY']->modify('-3 day')->format('Y-m-d'), 'Thu'],
+        'Fri' => [$GLOBALS['DAY']->modify('-4 day')->format('Y-m-d'), 'Fri'],
+        'Sat' => [$GLOBALS['DAY']->modify('-5 day')->format('Y-m-d'), 'Sat'],
+        'Sun' => [$GLOBALS['DAY']->modify('-5 day')->format('Y-m-d'), 'Sun'],
+        default => throw new \Exception('Dia da semana não tratado')
+    };
+        // return [$GLOBALS['date']];
+    }
+
+    public function verifyMondayOrTuesday($date) {
+        $this->verifyDate($date);
+    
+        // 1 = Segunda-feira,2 = Terça-feira, 3 = Quarta-feira, 4 = Quinta-feira, 5 = Sexta-feira, 6 = Sábado, 7 = Domingo
+
+        $dayOfWeek = date('N', strtotime($date));
+    
+        if (!$dayOfWeek == 1 || !$dayOfWeek == 2) {
+            throw new \Exception("A data não pode ser diferente de segunda ou terça-feira.");
+        }
+    
+        return $date; 
     }
 
     public function verifyDate($date) {
-        if ($date === null) {
-            throw new \Exception("Data inválida");
-        }
-    
-        [$year, $month, $day] = explode('-', $date);
-
         $check = match (true) {
+            $date === null => 'Data inválida',
             !preg_match(Regex::DATE, $date) => 'Formato de data inválido',
-            checkdate($month, $day, $year) === false => 'Data inválida, favor verificar',
-            date("Y") < $year => 'O Ano selecionado não pode ser maior que o ano atual',
+            $date > $GLOBALS['date']=> 'Data maior que o dia atual, favor verificar',
             default => null
         };
 
