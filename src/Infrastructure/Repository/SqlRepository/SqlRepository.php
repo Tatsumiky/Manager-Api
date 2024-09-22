@@ -65,4 +65,31 @@ class SqlRepository implements SqlInterface {
             throw new PDOException("Falha ao atualizar dados do usuário");
         }
     }
+    public function selectFindAllWhere(string $table, array $conditions): array | null
+    {
+        $sql = "SELECT * FROM $table WHERE ";
+        $sql .= implode(' AND ', array_map(fn($key) => "$key = :$key", array_keys($conditions)));
+        $stmt = $this->sql->prepare($sql);
+        foreach ($conditions as $key => $value) {
+            $stmt->bindValue(":$key", $value);
+        }
+        $stmt->execute();
+        return $stmt->fetchAll(\PDO::FETCH_ASSOC);
+    }
+
+    public function deleteWhere(string $table, array $conditions): int
+    {
+        $sql = "DELETE FROM $table WHERE ";
+        $sql .= implode(' AND ', array_map(fn($key) => "$key = :$key", array_keys($conditions)));
+        $stmt = $this->sql->prepare($sql);
+        foreach ($conditions as $key => $value) {
+            $stmt->bindValue(":$key", $value);
+        }
+        try {
+            $stmt->execute();
+            return $stmt->rowCount();
+        } catch (\Exception $e) {
+            return 0;
+        }
+    }
 }

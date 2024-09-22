@@ -8,6 +8,7 @@ use Psr\Http\Message\ServerRequestInterface as Request;
 use App\Application\Actions\RegisterAction\RegisterAction;
 use Slim\Interfaces\RouteCollectorProxyInterface as Group;
 use App\Application\Actions\LoginAction\LoginSessionAction;
+use App\Application\Actions\FavoritesAction\SaveFavoriteAction;
 
 
 return function (App $app) {
@@ -22,4 +23,5 @@ return function (App $app) {
 
     $app->post('/register', RegisterAction::class);
     $app->post("/login", LoginSessionAction::class);
+    $app->post('/favorites', SaveFavoriteAction::class);
 };
